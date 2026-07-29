@@ -1,18 +1,24 @@
 package com.scaler.payment.service;
+import com.scaler.payment.config.RazorpayConfig;
 
 import com.razorpay.PaymentLink;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import org.json.JSONObject;
-import com.razorpay.Payment;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 
 @Service
-public class PaymentService {
+public class PaymentService implements IPaymentService {
+
+    @Autowired
+    private RazorpayConfig razorpayConfig;
 
 
-    public String doPayment() throws RazorpayException {
+    public String doStandardPaymentLink() throws RazorpayException {
+
+        // Standard payment link which has upi, netbanking etc
         RazorpayClient razorpay = new RazorpayClient("<api_key>", "<secret_key>");
         JSONObject paymentLinkRequest = new JSONObject();
         paymentLinkRequest.put("amount", 1000);
@@ -62,6 +68,35 @@ public class PaymentService {
 //        paymentLinkRequest.put("notes", notes);
 
         PaymentLink payment = razorpay.paymentLink.create(paymentLinkRequest);
+        return payment.get("short_url");
+    }
+
+    @Override
+    public String initiatePayment(String name, String phoneNumber, String email, Double amount,
+                                  String description) throws RazorpayException {
+        //        UPI Payment link no supported in test api's
+        JSONObject paymentLinkRequest = new JSONObject();
+        paymentLinkRequest.put("upi_link", true);
+        paymentLinkRequest.put("amount", amount);
+        paymentLinkRequest.put("currency", "INR");
+        paymentLinkRequest.put("accept_partial", false);
+        paymentLinkRequest.put("first_min_partial_amount", 100);
+        paymentLinkRequest.put("description", description);
+        JSONObject customer = new JSONObject();
+        customer.put("name", name);
+        customer.put("contact", phoneNumber);
+        customer.put("email", email);
+        paymentLinkRequest.put("customer", customer);
+        JSONObject notify = new JSONObject();
+        notify.put("sms", true);
+        notify.put("email", true);
+        paymentLinkRequest.put("notify", notify);
+        paymentLinkRequest.put("reminder_enable", true);
+        JSONObject notes = new JSONObject();
+        notes.put("policy_name", "Life Insurance Policy");
+        paymentLinkRequest.put("notes", notes);
+        RazorpayClient razorpayClient = razorpayConfig.getRazorpayClient();
+        PaymentLink payment = razorpayClient.paymentLink.create(paymentLinkRequest);
         return payment.get("short_url");
     }
 }
