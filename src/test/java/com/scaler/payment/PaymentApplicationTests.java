@@ -1,4 +1,4 @@
-package com.scaler.product;
+package com.scaler.payment;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
