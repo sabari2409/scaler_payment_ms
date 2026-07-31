@@ -5,16 +5,18 @@ import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.razorpay.Refund;
 import com.scaler.payment.config.RazorpayConfig;
-import com.scaler.payment.dto.RazorpayCustomerContactDetails;
-import com.scaler.payment.dto.RazorpayPlanRequest;
-import com.scaler.payment.dto.RazorpaySubscriptionRequest;
+import com.scaler.payment.dto.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import com.razorpay.Subscription;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 @Component
@@ -26,10 +28,16 @@ public class RazorpayPaymentGatewayClient {
     @Autowired
     private RazorpayConfig razorpayConfig;
 
+    @Autowired
+    RestTemplateBuilder restTemplateBuilder;
+
     private final String offerId = "offer_JTUADI4ZWBGWur";
 
     private final String paymentId = "pay_39QqoUAi66xm2f"; //use this paymentId, wherever needed
 
+    private final String path = "https://api.razorpay.com/v1/payouts";
+
+    // Assignment 3
     public String issueInstantRefund(Double amount, String receipt) {
 
         try {
@@ -48,6 +56,7 @@ public class RazorpayPaymentGatewayClient {
         }
     }
 
+    // Assignment 3
     public String updateRefund(String refundId, JSONObject jsonObject) {
         try {
 
@@ -61,6 +70,7 @@ public class RazorpayPaymentGatewayClient {
     }
 
 
+    // Assignment 4
     public Subscription createSubscriptionLink(RazorpaySubscriptionRequest subscriptionInput) {
         try {
 
@@ -102,5 +112,38 @@ public class RazorpayPaymentGatewayClient {
         } catch (RazorpayException ex) {
             throw new RuntimeException(ex.getMessage());
         }
+    }
+
+
+    // Assignment 5
+    public String createPayoutToBankAccount(String accountNumber, Double amount, PayoutPurpose purpose, String referenceId, String narration) {
+        RestTemplate restTemplate = restTemplateBuilder.build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBasicAuth("", "");
+        headers.set("X-Payout-Idempotency", "53cda91c-8f81-4e77-bbb9-7388f4ac6bf4");
+
+        JSONObject payoutRequest = new JSONObject();
+        payoutRequest.put("account_number", accountNumber);
+        payoutRequest.put("fund_account_id", "fa_00000000000001");
+        payoutRequest.put("amount", amount);
+        payoutRequest.put("currency", "INR");
+        payoutRequest.put("mode", "IMPS");
+        payoutRequest.put("purpose", purpose.toString());
+        payoutRequest.put("queue_if_low_balance", true);
+        payoutRequest.put("reference_id", referenceId);
+        payoutRequest.put("narration", narration);
+
+        JSONObject notes = new JSONObject();
+        notes.put("notes_key_1", "Tea, Earl Grey, Hot");
+        notes.put("notes_key_2", "Tea, Earl Grey… decaf.");
+        payoutRequest.put("notes", notes);
+
+        HttpEntity<String> httpEntity = new HttpEntity<>(payoutRequest.toString(), headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(path, HttpMethod.POST, httpEntity, String.class);
+        return responseEntity.getBody();
+
     }
 }
