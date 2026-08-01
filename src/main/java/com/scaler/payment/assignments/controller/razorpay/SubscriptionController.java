@@ -1,6 +1,6 @@
 package com.scaler.payment.assignments.controller.razorpay;
 
-import com.scaler.payment.assignments.dto.stripe.razorpay.CreateSubscriptionRequest;
+import com.scaler.payment.assignments.dto.razorpay.CreateSubscriptionRequest;
 import com.scaler.payment.assignments.service.assignments.ISubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
