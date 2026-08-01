@@ -7,7 +7,6 @@ import com.scaler.payment.assignments.config.RazorpayConfig;
 import com.scaler.payment.assignments.dto.razorpay.PayoutPurpose;
 import com.scaler.payment.assignments.dto.razorpay.RazorpayCustomerContactDetails;
 import com.scaler.payment.assignments.dto.razorpay.RazorpaySubscriptionRequest;
-import com.scaler.payment.dto.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
