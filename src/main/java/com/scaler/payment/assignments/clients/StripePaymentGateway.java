@@ -1,12 +1,11 @@
 package com.scaler.payment.assignments.clients;
 
 import com.scaler.payment.assignments.dto.stripe.SessionDto;
+import com.scaler.payment.assignments.dto.stripe.Webhook;
+import com.scaler.payment.assignments.dto.stripe.WebhookStatus;
 import com.stripe.StripeClient;
 import com.stripe.exception.StripeException;
-import com.stripe.model.Customer;
-import com.stripe.model.PaymentLink;
-import com.stripe.model.Price;
-import com.stripe.model.Subscription;
+import com.stripe.model.*;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.*;
 import com.stripe.param.checkout.SessionCreateParams;
@@ -119,6 +118,62 @@ public class StripePaymentGateway {
             throw new RuntimeException(ex.getMessage());
         }
     }
+
+
+    // Assignment 4
+    public Webhook createWebhook(String url, List<String> events) {
+        try {
+            StripeClient client = new StripeClient(this.apiKey);
+            WebhookEndpointCreateParams params = WebhookEndpointCreateParams.builder()
+                    .addEnabledEvent(WebhookEndpointCreateParams.EnabledEvent.PAYMENT_LINK__CREATED)
+                    .setUrl(url)
+                    .build();
+            WebhookEndpoint webhookEndpoint = client.webhookEndpoints().create(params);
+
+            Webhook webhook = new Webhook();
+            webhook.setSecret(webhookEndpoint.getSecret());
+            webhook.setId(webhookEndpoint.getId());
+            webhook.setUrl(webhookEndpoint.getUrl());
+            webhook.setStatus(WebhookStatus.valueOf(webhookEndpoint.getStatus()));
+            webhook.setEvents(webhookEndpoint.getEnabledEvents());
+            return webhook;
+        } catch (StripeException ex) {
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
+    public Boolean deleteWebhook(String webhookId) {
+        try {
+            StripeClient client = new StripeClient(this.apiKey);
+            WebhookEndpoint webhookEndpoint =
+                    client.webhookEndpoints().delete(webhookId);
+            return webhookEndpoint.getDeleted();
+        } catch (StripeException ex) {
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
+    public Webhook updateWebhook(String updatedUrl, List<String> events, String webhookId) {
+        try {
+            StripeClient client = new StripeClient(this.apiKey);
+            WebhookEndpointUpdateParams params = WebhookEndpointUpdateParams.builder()
+                    .addEnabledEvent(WebhookEndpointUpdateParams.EnabledEvent.PAYMENT_LINK__CREATED)
+                    .addEnabledEvent(WebhookEndpointUpdateParams.EnabledEvent.PAYMENT_LINK__UPDATED)
+                    .setUrl(updatedUrl)
+                    .build();
+            WebhookEndpoint webhookEndpoint = client.webhookEndpoints().update(webhookId, params);
+
+            Webhook webhook = new Webhook();
+            webhook.setId(webhookEndpoint.getId());
+            webhook.setUrl(webhookEndpoint.getUrl());
+            webhook.setStatus(WebhookStatus.valueOf(webhookEndpoint.getStatus()));
+            webhook.setEvents(webhookEndpoint.getEnabledEvents());
+            return webhook;
+        } catch (StripeException ex) {
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
 
     // Assignment 2
     private String getCheckoutPriceId(List<Long> amount) {
